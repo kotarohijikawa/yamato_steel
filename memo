@@ -1,0 +1,3 @@
+python .\ana.py .\1Z燃料流量.csv .\1Z燃料設定.csv .\1Z燃料SV基準.csv .\1Z燃料設定上限.csv .\1Z燃料設定下限.csv
+python .\ana.py .\1Z空気流量.csv .\1Z空気設定.csv .\1Z空気SV基準.csv .\1Z空気設定上限.csv .\1Z空気設定下限.csv
+

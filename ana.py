@@ -4,6 +4,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import os
+import japanize_matplotlib
 
 ################################################################################
 # 解析結果めも
@@ -55,15 +56,24 @@ def check_csv_row_counts():
         df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
         time_diffs = df["Time"].diff().dropna()
         most_common_time_diff = time_diffs.mode().iloc[0] if not time_diffs.empty else None
+
+        u = df["Value"].dropna().unique()
+        all_same = (len(u) == 1)
+        if all_same:
+            note = f"値は全て {u[0]}"
+        else:
+            note = ""
+
         output_data.append({
             "file_name": os.path.basename(path),
             "row_count": row_count,
             "start_time": start_time,
             "end_time": end_time,
-            "most_common_time_diff": most_common_time_diff
+            "most_common_time_diff": most_common_time_diff,
+            "note": note,
         })
     output_df = pd.DataFrame(output_data)
-    output_df.to_csv("./csv_file_info.csv", index=False, encoding="utf-8-sig")
+    output_df.to_csv("./csv_file_info.csv", index=True, encoding="utf-8-sig")
 
 # 調査4:先ほど作った「csv_file_info.csv」を読み込んで、開始時刻-終了時刻の組み合わせでユニークなものを列挙して、各パターンに当てはまるCSVがどれくらいあったか表示する。
 def analyze_csv_file_info():
@@ -94,17 +104,25 @@ def analyze_csv_file_info():
 # 調査
 
 def plot():
-    path = sys.argv[1]
-    df = pd.read_csv(path)
-    plt.plot(df['Time'].to_numpy(), df['Value'].to_numpy())
-    plt.title(os.path.basename(path))
+    args = sys.argv
+    for arg in args:
+        if arg.strip()[-4:]==".csv":
+            df = pd.read_csv(arg)
+            # print(df.describe().T)
+
+            # 10分=600秒おきにダウンサンプリング
+            df = df.iloc[::600].reset_index(drop=True)
+
+            plt.plot((pd.to_datetime(df['Time'])).to_numpy(), df['Value'].to_numpy(),label=f'{os.path.basename(arg).split(".")[0]}')
+    plt.grid()
+    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
     # check_non_csv_files()
     # check_csv_headers()
-    # check_csv_row_counts()
+    check_csv_row_counts()
     # analyze_csv_file_info()
-    plot()
+    # plot()
 
     print()

@@ -88,7 +88,7 @@ class LoopFiles:
     pv: str
     sv: str
     mv: str
-    mode: str
+    mode: Optional[str] = None
 
 
 def load_loop(loop: LoopFiles, base_dir: str | Path = ".",
@@ -99,14 +99,16 @@ def load_loop(loop: LoopFiles, base_dir: str | Path = ".",
         "PV": downsample_every_n(read_timeseries_csv(base_dir / loop.pv), downsample_n),
         "SV": downsample_every_n(read_timeseries_csv(base_dir / loop.sv), downsample_n),
         "MV": downsample_every_n(read_timeseries_csv(base_dir / loop.mv), downsample_n),
-        "MODE": downsample_every_n(read_timeseries_csv(base_dir / loop.mode), downsample_n),
     }
+    if loop.mode:
+        dfs["MODE"] = downsample_every_n(read_timeseries_csv(base_dir / loop.mode), downsample_n)
 
     data = align_on_common_time(dfs)
 
-    # MODEは本来カテゴリか0/1/数値のはず。ここでは数値化しておく
-    # 文字列だった場合はNaNになるけど、その場合は先にCSV側を確認してね
-    data["MODE"] = pd.to_numeric(data["MODE"], errors="coerce")
+    if "MODE" not in data.columns:
+        data["MODE"] = np.nan
+    else:
+        data["MODE"] = pd.to_numeric(data["MODE"], errors="coerce")
 
     # ★追加：偏差 e = SV - PV（両方あるところだけ）
     data["E"] = data["SV"] - data["PV"]
@@ -153,16 +155,17 @@ def plot_loop(data: pd.DataFrame, title: str = "", max_points: Optional[int] = N
     plt.show()
 
     # MODEを別図で
-    fig, ax = plt.subplots(figsize=(12, 2.5))
-    ax.plot(data.index.to_numpy(), data["MODE"].to_numpy(), label="MODE",c=red)
-    ax.set_ylabel("MODE")
-    ax.set_title((title + "  ") if title else "" + "MODE")
-    ax.tick_params(labelsize=15)
-    ax.xaxis.set_ticks_position('both')
-    ax.yaxis.set_ticks_position('both')
-    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
-    plt.tight_layout()
-    plt.show()
+    if "MODE" in data.columns and data["MODE"].notna().any():
+        fig, ax = plt.subplots(figsize=(12, 2.5))
+        ax.plot(data.index.to_numpy(), data["MODE"].to_numpy(), label="MODE",c=red)
+        ax.set_ylabel("MODE")
+        ax.set_title((title + "  ") if title else "" + "MODE")
+        ax.tick_params(labelsize=15)
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
+        plt.tight_layout()
+        plt.show()
 
 
 def lag_correlation(x: pd.Series, y: pd.Series, max_lag_steps: int = 200) -> Tuple[int, float, pd.DataFrame]:

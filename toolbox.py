@@ -308,8 +308,8 @@ def compare_series_similarity(
 
     # 時系列重ね描き（形の比較）
     fig, ax = plt.subplots(figsize=(12, 4))
-    ax.plot(x.index.to_numpy(), x.values.to_numpy(), label=col_x + (" (z)" if standardize else ""),c='blue')
-    ax.plot(y.index.to_numpy(), y.values.to_numpy(), label=col_y + (" (z)" if standardize else ""),c='green')
+    ax.plot(x.index.to_numpy(), x.values, label=col_x + (" (z)" if standardize else ""),c=blue)
+    ax.plot(y.index.to_numpy(), y.values, label=col_y + (" (z)" if standardize else ""),c=green)
     ax.set_title(title or f"Overlay: {col_x} vs {col_y}" + (" [standardized]" if standardize else ""))
     ax.legend()
     ax.xaxis.set_ticks_position('both')
@@ -319,7 +319,7 @@ def compare_series_similarity(
 
     # 散布図
     fig, ax = plt.subplots(figsize=(4.5, 4.5))
-    ax.scatter(x.values, y.values, s=6, c='red')
+    ax.scatter(x.values, y.values, s=6, c=red)
     ax.set_title(title or f"Scatter: {col_x} vs {col_y}")
     ax.set_xlabel(col_x + (" (z)" if standardize else ""))
     ax.set_ylabel(col_y + (" (z)" if standardize else ""))
@@ -331,8 +331,8 @@ def compare_series_similarity(
 
     # ラグ相関カーブ
     fig, ax = plt.subplots(figsize=(10, 3))
-    ax.plot(corr_df["lag_steps"], corr_df["corr"], c='red')
-    ax.axvline(best_lag, linestyle="--",c='green')
+    ax.plot(corr_df["lag_steps"], corr_df["corr"], c=red)
+    ax.axvline(best_lag, linestyle="--",c=green)
     ax.set_title(title or f"Lag Corr: corr({col_x}(t), {col_y}(t+lag))")
     ax.set_xlabel("lag_steps")
     ax.set_ylabel("corr")

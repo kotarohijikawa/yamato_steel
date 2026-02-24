@@ -10,6 +10,37 @@ import matplotlib.pyplot as plt
 import japanize_matplotlib
 import pprint
 
+### plt設定
+frame_lw = 1.0
+plt.rcParams['xtick.direction'] = 'in' # 目盛内向き
+plt.rcParams['ytick.direction'] = 'in'
+plt.rcParams['xtick.minor.visible'] = True # 小目盛表示
+plt.rcParams['ytick.minor.visible'] = True
+plt.rcParams['xtick.major.size'] =  20.0 # 目盛の長さ
+plt.rcParams['ytick.major.size'] =  20.0
+plt.rcParams['xtick.minor.size'] =  10.0
+plt.rcParams['ytick.minor.size'] =  10.0
+plt.rcParams['xtick.major.width'] =  frame_lw # 目盛の太さ
+plt.rcParams['ytick.major.width'] =  frame_lw
+plt.rcParams['xtick.minor.width'] =  frame_lw
+plt.rcParams['ytick.minor.width'] =  frame_lw
+plt.rcParams['mathtext.fontset'] =  'cm'
+plt.rcParams['axes.linewidth'] =  frame_lw # 外枠の太さ
+plt.rcParams['axes.axisbelow'] = True # グリッド線を最背面に
+plt.rcParams["legend.fancybox"] = False # 角が四角に
+plt.rcParams["legend.framealpha"] = 1 # 透明度
+plt.rcParams["legend.edgecolor"] = 'black' # edgeの色
+### よく使う色
+red = '#E95464'
+green = '#00AF55'
+blue = '#4179F7'
+orange = '#F08300'
+yellow = '#FFEC47'
+purple = '#7058A3'
+ebicha = '#6c2c2f'
+momo = '#e198b4'
+fuji = '#5a5359'
+
 # --------------------------
 # 基本IO
 # --------------------------
@@ -91,18 +122,18 @@ def plot_loop(data: pd.DataFrame, title: str = "", max_points: Optional[int] = N
         data = data.iloc[:max_points]
 
     fig, ax1 = plt.subplots(figsize=(12, 5))
-    ax1.plot(data.index, data["PV"], label="PV", c='red')
-    ax1.plot(data.index, data["SV"], label="SV", c='green', ls='dashed')
+    ax1.plot(data.index.to_numpy(), data["PV"].to_numpy(), label="PV", c=red)
+    ax1.plot(data.index.to_numpy(), data["SV"].to_numpy(), label="SV", c=green, ls='dashed')
     ax1.set_ylabel("PV / SV")
     ax1.legend(loc="upper left")
 
     ax2 = ax1.twinx()
-    ax2.plot(data.index, data["MV"], label="MV", c='blue', alpha=0.8)
+    ax2.plot(data.index.to_numpy(), data["MV"].to_numpy(), label="MV", c=blue, alpha=0.8)
     ax2.set_ylabel("MV")
     ax2.legend(loc="upper right")
-
-    plt.grid()
-
+    ax1.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
+    ax1.tick_params(labelsize=15)
+    ax1.xaxis.set_ticks_position('both')
     plt.title(title or "Control Loop (PV/SV/MV)")
     plt.tight_layout()
     plt.show()
@@ -110,20 +141,26 @@ def plot_loop(data: pd.DataFrame, title: str = "", max_points: Optional[int] = N
     # ★3) 偏差 e = SV - PV
     fig, ax = plt.subplots(figsize=(12, 3.5))
     # 欠損があると線が途切れるけど、それが「どこで揃ってないか」の情報にもなる
-    ax.plot(data.index, data["E"], label="E = SV - PV", c='orange')
+    ax.plot(data.index.to_numpy(), data["E"].to_numpy(), label="E = SV - PV", c=orange)
     ax.axhline(0.0, linestyle="--", linewidth=1, c='k')
     ax.set_ylabel("Error (SV - PV)")
     ax.set_title((title + "  ") if title else "" + "Error (SV - PV)")
     plt.tight_layout()
-    plt.grid()
+    ax.tick_params(labelsize=15)
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
     plt.show()
 
     # MODEを別図で
     fig, ax = plt.subplots(figsize=(12, 2.5))
-    ax.plot(data.index, data["MODE"], label="MODE",c='red')
+    ax.plot(data.index.to_numpy(), data["MODE"].to_numpy(), label="MODE",c=red)
     ax.set_ylabel("MODE")
     ax.set_title((title + "  ") if title else "" + "MODE")
-    plt.grid()
+    ax.tick_params(labelsize=15)
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
     plt.tight_layout()
     plt.show()
 
@@ -189,14 +226,16 @@ def analyze_loop(loop: LoopFiles, base_dir: str | Path = ".",
     print(f"approx delay = {approx_minutes} minutes (assuming 1s sampling and downsample_n=600)")
 
     # 相関カーブも見せる
-    plt.figure(figsize=(10, 3))
-    plt.plot(corr_df["lag_steps"], corr_df["corr"],c='red')
-    plt.axvline(best_lag, linestyle="--",c='green')
-    plt.title((title + "  ") if title else "" + "Lag Corr: corr(MV(t), PV(t+lag))")
-    plt.xlabel("lag_steps")
-    plt.ylabel("corr")
-    plt.tight_layout()
-    plt.grid()
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(corr_df["lag_steps"].to_numpy(), corr_df["corr"].to_numpy(), c=red)
+    ax.axvline(best_lag, linestyle="--",c='green')
+    ax.set_title((title + "  ") if title else "" + "Lag Corr: corr(MV(t), PV(t+lag))")
+    ax.set_xlabel("lag_steps")
+    ax.set_ylabel("corr")
+    fig.tight_layout()
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
     plt.show()
 
 def zscore(s: pd.Series) -> pd.Series:
@@ -268,34 +307,39 @@ def compare_series_similarity(
     a, b, r2 = linear_fit_r2(x.values, y.values)
 
     # 時系列重ね描き（形の比較）
-    plt.figure(figsize=(12, 4))
-    plt.plot(x.index, x.values, label=col_x + (" (z)" if standardize else ""),c='blue')
-    plt.plot(y.index, y.values, label=col_y + (" (z)" if standardize else ""),c='green')
-    plt.title(title or f"Overlay: {col_x} vs {col_y}" + (" [standardized]" if standardize else ""))
-    plt.legend()
-    plt.tight_layout()
-    plt.grid()
+    fig, ax = plt.subplots(figsize=(12, 4))
+    ax.plot(x.index.to_numpy(), x.values, label=col_x + (" (z)" if standardize else ""),c=blue)
+    ax.plot(y.index.to_numpy(), y.values, label=col_y + (" (z)" if standardize else ""),c=green)
+    ax.set_title(title or f"Overlay: {col_x} vs {col_y}" + (" [standardized]" if standardize else ""))
+    ax.legend()
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
     plt.show()
 
     # 散布図
-    plt.figure(figsize=(4.5, 4.5))
-    plt.scatter(x.values, y.values, s=6, c='red')
-    plt.title(title or f"Scatter: {col_x} vs {col_y}")
-    plt.xlabel(col_x + (" (z)" if standardize else ""))
-    plt.ylabel(col_y + (" (z)" if standardize else ""))
-    plt.tight_layout()
-    plt.grid()
+    fig, ax = plt.subplots(figsize=(4.5, 4.5))
+    ax.scatter(x.values, y.values, s=6, c=red)
+    ax.set_title(title or f"Scatter: {col_x} vs {col_y}")
+    ax.set_xlabel(col_x + (" (z)" if standardize else ""))
+    ax.set_ylabel(col_y + (" (z)" if standardize else ""))
+    fig.tight_layout()
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
     plt.show()
 
     # ラグ相関カーブ
-    plt.figure(figsize=(10, 3))
-    plt.plot(corr_df["lag_steps"], corr_df["corr"], c='red')
-    plt.axvline(best_lag, linestyle="--",c='green')
-    plt.title(title or f"Lag Corr: corr({col_x}(t), {col_y}(t+lag))")
-    plt.xlabel("lag_steps")
-    plt.ylabel("corr")
-    plt.tight_layout()
-    plt.grid()
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(corr_df["lag_steps"], corr_df["corr"], c=red)
+    ax.axvline(best_lag, linestyle="--",c=green)
+    ax.set_title(title or f"Lag Corr: corr({col_x}(t), {col_y}(t+lag))")
+    ax.set_xlabel("lag_steps")
+    ax.set_ylabel("corr")
+    fig.tight_layout()
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.grid(color='k', linestyle='dotted', linewidth=frame_lw, axis='both')
     plt.show()
 
     # 結果

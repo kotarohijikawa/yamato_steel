@@ -45,9 +45,26 @@ def check_csv_headers():
 # 調査3：各CSVの情報を出力
 # ファイル名、行数、開始時刻、終了時刻、時間刻み幅の最頻値をCSVに出力する。
 def check_csv_row_counts():
+    df_list = pd.read_csv("リスト.csv")
     output_data = []
     for i, path in enumerate(csv_paths):
         print(f"{i+1}/{len(csv_paths)}: {path}")
+        base_name = os.path.basename(path)
+        file_name = base_name.split(".")[0]
+
+        df_list_mask = df_list[df_list["記述"].apply(lambda s: s in file_name)]
+        if len(df_list_mask)<=0:
+            print("該当する行なし")
+        elif len(df_list_mask)==1:
+            print(df_list_mask["記述"].iloc[0])
+        else:
+            df_list_mask_mask = df_list_mask[df_list_mask["記述"]==file_name]
+            if len(df_list_mask_mask)==1:
+                print(df_list_mask_mask["記述"].iloc[0])
+            else:
+                print(df_list_mask["記述"].tolist())
+        print()
+
         df = pd.read_csv(path)
         row_count = len(df)
         start_time = df["Time"].iloc[0] if row_count > 0 else None
@@ -65,7 +82,8 @@ def check_csv_row_counts():
             note = ""
 
         output_data.append({
-            "file_name": os.path.basename(path),
+            "file_name": base_name,
+            # "tags": tags,
             "row_count": row_count,
             "start_time": start_time,
             "end_time": end_time,
